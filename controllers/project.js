@@ -1,4 +1,34 @@
 import Project from "../models/Project.js";
+import { uploadImage, deleteImageByUrl } from "../services/cloudinary.js";
+
+// Normaliza campos que llegan como string vía FormData
+function normalizeProjectBody(body) {
+    const normalized = { ...body };
+
+    // programs puede llegar como string JSON o coma-separado
+    if (typeof normalized.programs === "string") {
+        try {
+            const parsed = JSON.parse(normalized.programs);
+            if (Array.isArray(parsed)) normalized.programs = parsed;
+            else normalized.programs = String(normalized.programs).split(",").map(s => s.trim()).filter(Boolean);
+        } catch {
+            normalized.programs = String(normalized.programs).split(",").map(s => s.trim()).filter(Boolean);
+        }
+    }
+    if (normalized.programs && !Array.isArray(normalized.programs)) {
+        normalized.programs = [normalized.programs];
+    }
+
+    // Fechas
+    if (typeof normalized.startDate === "string" && normalized.startDate) {
+        normalized.startDate = new Date(normalized.startDate);
+    }
+    if (typeof normalized.endDate === "string" && normalized.endDate) {
+        normalized.endDate = new Date(normalized.endDate);
+    }
+
+    return normalized;
+}
 
 export async function getAllProjects(req, res) {
     try {
@@ -21,7 +51,16 @@ export async function getProjectById(req, res) {
 
 export async function createProject(req, res) {
     try {
-        const newProject = new Project(req.body);
+        const payload = normalizeProjectBody(req.body);
+        let images = [];
+        if (req.files && req.files.length > 0) {
+            const uploads = await Promise.all(
+                req.files.map((f) => uploadImage(f.buffer, "somos/project", f.mimetype))
+            );
+            images = uploads.map(u => u.url);
+        }
+
+        const newProject = new Project({ ...payload, images });
         await newProject.save();
         res.status(201).json(newProject);
     } catch (err) {
@@ -31,7 +70,46 @@ export async function createProject(req, res) {
 
 export async function updateProject(req, res) {
     try {
-        const updated = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const existing = await Project.findById(req.params.id);
+        if (!existing) return res.status(404).json({ message: "Proyecto no encontrado" });
+
+        const payload = normalizeProjectBody(req.body);
+        // Permitir limpiar imágenes sin subir nuevas
+        const removeAllFlag = String(payload.removeAllImages || "").toLowerCase() === "true";
+        let imagesField = payload.images;
+        if (typeof imagesField === "string") {
+            try {
+                const parsed = JSON.parse(imagesField);
+                imagesField = Array.isArray(parsed) ? parsed : imagesField;
+            } catch {
+                // no-op si no es JSON
+            }
+        }
+        const wantsEmptyImages = Array.isArray(imagesField) && imagesField.length === 0;
+
+        if ((removeAllFlag || wantsEmptyImages) && (!req.files || req.files.length === 0)) {
+            if (Array.isArray(existing.images) && existing.images.length > 0) {
+                await Promise.all(existing.images.map((url) => deleteImageByUrl(url)));
+            }
+            const updated = await Project.findByIdAndUpdate(
+                req.params.id,
+                { $set: { images: [] } },
+                { new: true }
+            );
+            return res.json(updated);
+        }
+        // Si hay archivos nuevos, elimina todas las imágenes anteriores y reemplaza
+        if (req.files && req.files.length > 0) {
+            if (Array.isArray(existing.images) && existing.images.length > 0) {
+                await Promise.all(existing.images.map((url) => deleteImageByUrl(url)));
+            }
+            const uploads = await Promise.all(
+                req.files.map((f) => uploadImage(f.buffer, "somos/project", f.mimetype))
+            );
+            payload.images = uploads.map(u => u.url);
+        }
+
+        const updated = await Project.findByIdAndUpdate(req.params.id, payload, { new: true });
         if (!updated) return res.status(404).json({ message: "Proyecto no encontrado" });
         res.json(updated);
     } catch (err) {
@@ -41,6 +119,13 @@ export async function updateProject(req, res) {
 
 export async function deleteProject(req, res) {
     try {
+        const existing = await Project.findById(req.params.id);
+        if (!existing) return res.status(404).json({ message: "Proyecto no encontrado" });
+
+        if (Array.isArray(existing.images) && existing.images.length > 0) {
+            await Promise.all(existing.images.map((url) => deleteImageByUrl(url)));
+        }
+
         const deleted = await Project.findByIdAndDelete(req.params.id);
         if (!deleted) return res.status(404).json({ message: "Proyecto no encontrado" });
         res.json({ message: "Proyecto eliminado" });

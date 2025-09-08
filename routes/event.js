@@ -7,13 +7,14 @@ import {
     deleteEvent
 } from "../controllers/event.js";
 import { authMiddleware } from "../middlewares/auth.js";
+import { uploadMultipleImages } from "../middlewares/upload.js";
 
 const router = express.Router();
 
 router.get("/", getAllEvents);
 router.get("/:id", getEventById);
-router.post("/", authMiddleware, createEvent);
-router.put("/:id", authMiddleware, updateEvent);
+router.post("/", authMiddleware, uploadMultipleImages, createEvent);
+router.put("/:id", authMiddleware, uploadMultipleImages, updateEvent);
 router.delete("/:id", authMiddleware, deleteEvent);
 
 export default router;
