@@ -59,15 +59,9 @@ export async function deleteImageByUrl(url) {
     return cloudinary.uploader.destroy(publicId);
 }
 
-export async function replaceImage(oldUrl, bufferOrPath, folder, mimeType = "image/png") {
-    if (oldUrl) await deleteImageByUrl(oldUrl);
-    return uploadImage(bufferOrPath, folder, mimeType);
-}
-
 export default {
     uploadImage,
     deleteImageByUrl,
-    replaceImage,
     getPublicIdFromUrl,
 };
 

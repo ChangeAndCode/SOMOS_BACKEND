@@ -67,15 +67,32 @@ export async function updateEvent(req, res) {
             return res.json(updated);
         }
 
-        // Si hay archivos nuevos, elimina todas las imágenes anteriores y reemplaza
+        // Normalizar lista de imágenes a conservar desde el body (si viene)
+        let keepImages = Array.isArray(imagesField) ? imagesField : (existing.images || []);
+
+        // Subir nuevas y concatenar sin borrar las que se conservan
         if (req.files && req.files.length > 0) {
-            if (Array.isArray(existing.images) && existing.images.length > 0) {
-                await Promise.all(existing.images.map((url) => deleteImageByUrl(url)));
-            }
             const uploads = await Promise.all(
                 req.files.map((f) => uploadImage(f.buffer, "somos/event", f.mimetype))
             );
-            req.body.images = uploads.map(u => u.url);
+            const uploadedUrls = uploads.map(u => u.url);
+
+            // Borrar en Cloudinary solo las que ya no están en keepImages
+            const toDelete = (existing.images || []).filter((url) => !keepImages.includes(url));
+            if (toDelete.length > 0) {
+                await Promise.all(toDelete.map((url) => deleteImageByUrl(url)));
+            }
+
+            req.body.images = [...keepImages, ...uploadedUrls];
+        } else {
+            // Sin nuevas: si el cliente envió lista, sincroniza y borra las que ya no están
+            if (Array.isArray(keepImages)) {
+                const toDelete = (existing.images || []).filter((url) => !keepImages.includes(url));
+                if (toDelete.length > 0) {
+                    await Promise.all(toDelete.map((url) => deleteImageByUrl(url)));
+                }
+                req.body.images = keepImages;
+            }
         }
 
         const updated = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
