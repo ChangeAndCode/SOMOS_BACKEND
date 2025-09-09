@@ -8,7 +8,6 @@ import {
     handleGetEntityById 
 } from "../utils/controllerUtils.js";
 
-// Normaliza campos específicos de Event
 function normalizeEventBody(body) {
     return normalizeFormData(body, FIELD_CONFIGS.event);
 }

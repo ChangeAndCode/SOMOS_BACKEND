@@ -8,7 +8,6 @@ import {
     handleGetEntityById 
 } from "../utils/controllerUtils.js";
 
-// Normaliza campos específicos de Program
 function normalizeProgramBody(body) {
     return normalizeFormData(body, FIELD_CONFIGS.program);
 }
