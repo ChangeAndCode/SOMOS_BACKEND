@@ -129,8 +129,48 @@ export async function handleEntityDelete(Model, req, res, entityConfig) {
     }
 }
 
-// TODO: Agregar más funciones genéricas para CRUD
+// Función genérica para obtener todas las entidades
+export async function handleGetAllEntities(Model, req, res, entityConfig) {
+    try {
+        const { entityName, populate } = entityConfig;
+        
+        let query = Model.find();
+        if (populate) {
+            query = query.populate(populate);
+        }
+        
+        const entities = await query;
+        res.json(entities);
+    } catch (err) {
+        res.status(500).json({ message: `Error al obtener ${entityName.toLowerCase()}s`, error: err.message });
+    }
+}
+
+// Función genérica para obtener una entidad por ID
+export async function handleGetEntityById(Model, req, res, entityConfig) {
+    try {
+        const { id } = req.params;
+        const { entityName, populate } = entityConfig;
+        
+        let query = Model.findById(id);
+        if (populate) {
+            query = query.populate(populate);
+        }
+        
+        const entity = await query;
+        if (!entity) {
+            return res.status(404).json({ message: `${entityName} no encontrado` });
+        }
+        
+        res.json(entity);
+    } catch (err) {
+        res.status(500).json({ message: `Error al obtener ${entityName.toLowerCase()}`, error: err.message });
+    }
+}
+
+// ✅ CRUD genérico completado - Todas las operaciones implementadas
 // ✅ handleEntityCreate - COMPLETADO
-// ✅ handleEntityDelete - COMPLETADO  
-// - handleGetAllEntities
-// - handleGetEntityById
+// ✅ handleEntityUpdate - COMPLETADO  
+// ✅ handleEntityDelete - COMPLETADO
+// ✅ handleGetAllEntities - COMPLETADO
+// ✅ handleGetEntityById - COMPLETADO

@@ -1,7 +1,12 @@
 import Program from "../models/Program.js";
-import { uploadImage, deleteImageByUrl } from "../services/cloudinary.js";
-import { normalizeFormData, validateFiles, FIELD_CONFIGS } from "../utils/validation.js";
-import { handleEntityCreate, handleEntityUpdate, handleEntityDelete } from "../utils/controllerUtils.js";
+import { normalizeFormData, FIELD_CONFIGS } from "../utils/validation.js";
+import { 
+    handleEntityCreate, 
+    handleEntityUpdate, 
+    handleEntityDelete, 
+    handleGetAllEntities, 
+    handleGetEntityById 
+} from "../utils/controllerUtils.js";
 
 // Normaliza campos específicos de Program
 function normalizeProgramBody(body) {
@@ -9,22 +14,15 @@ function normalizeProgramBody(body) {
 }
 
 export async function getAllPrograms(req, res) {
-    try {
-        const programs = await Program.find();
-        res.json(programs);
-    } catch (err) {
-        res.status(500).json({ message: "Error al obtener programas", error: err.message });
-    }
+    return handleGetAllEntities(Program, req, res, {
+        entityName: 'Programa'
+    });
 }
 
 export async function getProgramById(req, res) {
-    try {
-        const program = await Program.findById(req.params.id);
-        if (!program) return res.status(404).json({ message: "Programa no encontrado" });
-        res.json(program);
-    } catch (err) {
-        res.status(500).json({ message: "Error al obtener programa", error: err.message });
-    }
+    return handleGetEntityById(Program, req, res, {
+        entityName: 'Programa'
+    });
 }
 
 export async function createProgram(req, res) {

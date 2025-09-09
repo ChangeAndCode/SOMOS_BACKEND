@@ -1,7 +1,12 @@
 import Event from "../models/Event.js";
-import { uploadImage, deleteImageByUrl } from "../services/cloudinary.js";
-import { normalizeFormData, validateFiles, FIELD_CONFIGS } from "../utils/validation.js";
-import { handleEntityCreate, handleEntityUpdate, handleEntityDelete } from "../utils/controllerUtils.js";
+import { normalizeFormData, FIELD_CONFIGS } from "../utils/validation.js";
+import { 
+    handleEntityCreate, 
+    handleEntityUpdate, 
+    handleEntityDelete, 
+    handleGetAllEntities, 
+    handleGetEntityById 
+} from "../utils/controllerUtils.js";
 
 // Normaliza campos específicos de Event
 function normalizeEventBody(body) {
@@ -9,22 +14,15 @@ function normalizeEventBody(body) {
 }
 
 export async function getAllEvents(req, res) {
-    try {
-        const events = await Event.find();
-        res.json(events);
-    } catch (err) {
-        res.status(500).json({ message: "Error al obtener eventos", error: err.message });
-    }
+    return handleGetAllEntities(Event, req, res, {
+        entityName: 'Evento'
+    });
 }
 
 export async function getEventById(req, res) {
-    try {
-        const event = await Event.findById(req.params.id);
-        if (!event) return res.status(404).json({ message: "Evento no encontrado" });
-        res.json(event);
-    } catch (err) {
-        res.status(500).json({ message: "Error al obtener evento", error: err.message });
-    }
+    return handleGetEntityById(Event, req, res, {
+        entityName: 'Evento'
+    });
 }
 
 export async function createEvent(req, res) {
