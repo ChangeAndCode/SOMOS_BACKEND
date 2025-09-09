@@ -1,9 +1,8 @@
 import Project from "../models/Project.js";
 import { uploadImage, deleteImageByUrl } from "../services/cloudinary.js";
 import { normalizeFormData, validateFiles, FIELD_CONFIGS } from "../utils/validation.js";
-import { handleEntityCreate, handleEntityUpdate } from "../utils/controllerUtils.js";
+import { handleEntityCreate, handleEntityUpdate, handleEntityDelete } from "../utils/controllerUtils.js";
 
-// Normaliza campos específicos de Project
 function normalizeProjectBody(body) {
     return normalizeFormData(body, FIELD_CONFIGS.project);
 }
@@ -44,18 +43,7 @@ export async function updateProject(req, res) {
 }
 
 export async function deleteProject(req, res) {
-    try {
-        const existing = await Project.findById(req.params.id);
-        if (!existing) return res.status(404).json({ message: "Proyecto no encontrado" });
-
-        if (Array.isArray(existing.images) && existing.images.length > 0) {
-            await Promise.all(existing.images.map((url) => deleteImageByUrl(url)));
-        }
-
-        const deleted = await Project.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ message: "Proyecto no encontrado" });
-        res.json({ message: "Proyecto eliminado" });
-    } catch (err) {
-        res.status(500).json({ message: "Error al eliminar proyecto", error: err.message });
-    }
+    return handleEntityDelete(Project, req, res, {
+        entityName: 'Proyecto'
+    });
 }

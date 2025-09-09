@@ -1,7 +1,7 @@
 import Program from "../models/Program.js";
 import { uploadImage, deleteImageByUrl } from "../services/cloudinary.js";
 import { normalizeFormData, validateFiles, FIELD_CONFIGS } from "../utils/validation.js";
-import { handleEntityCreate, handleEntityUpdate } from "../utils/controllerUtils.js";
+import { handleEntityCreate, handleEntityUpdate, handleEntityDelete } from "../utils/controllerUtils.js";
 
 // Normaliza campos específicos de Program
 function normalizeProgramBody(body) {
@@ -44,18 +44,7 @@ export async function updateProgram(req, res) {
 }
 
 export async function deleteProgram(req, res) {
-    try {
-        const existing = await Program.findById(req.params.id);
-        if (!existing) return res.status(404).json({ message: "Programa no encontrado" });
-
-        if (Array.isArray(existing.images) && existing.images.length > 0) {
-            await Promise.all(existing.images.map((url) => deleteImageByUrl(url)));
-        }
-
-        const deleted = await Program.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ message: "Programa no encontrado" });
-        res.json({ message: "Programa eliminado" });
-    } catch (err) {
-        res.status(500).json({ message: "Error al eliminar programa", error: err.message });
-    }
+    return handleEntityDelete(Program, req, res, {
+        entityName: 'Programa'
+    });
 }

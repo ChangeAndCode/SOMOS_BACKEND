@@ -1,7 +1,7 @@
 import Event from "../models/Event.js";
 import { uploadImage, deleteImageByUrl } from "../services/cloudinary.js";
 import { normalizeFormData, validateFiles, FIELD_CONFIGS } from "../utils/validation.js";
-import { handleEntityCreate, handleEntityUpdate } from "../utils/controllerUtils.js";
+import { handleEntityCreate, handleEntityUpdate, handleEntityDelete } from "../utils/controllerUtils.js";
 
 // Normaliza campos específicos de Event
 function normalizeEventBody(body) {
@@ -44,18 +44,7 @@ export async function updateEvent(req, res) {
 }
 
 export async function deleteEvent(req, res) {
-    try {
-        const existing = await Event.findById(req.params.id);
-        if (!existing) return res.status(404).json({ message: "Evento no encontrado" });
-
-        if (Array.isArray(existing.images) && existing.images.length > 0) {
-            await Promise.all(existing.images.map((url) => deleteImageByUrl(url)));
-        }
-
-        const deleted = await Event.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ message: "Evento no encontrado" });
-        res.json({ message: "Evento eliminado" });
-    } catch (err) {
-        res.status(500).json({ message: "Error al eliminar evento", error: err.message });
-    }
+    return handleEntityDelete(Event, req, res, {
+        entityName: 'Evento'
+    });
 }

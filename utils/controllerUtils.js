@@ -100,8 +100,37 @@ export async function handleEntityUpdate(Model, req, res, entityConfig) {
     }
 }
 
+// Función genérica para manejar eliminación de entidades con imágenes
+export async function handleEntityDelete(Model, req, res, entityConfig) {
+    try {
+        const { id } = req.params;
+        const { entityName } = entityConfig;
+
+        // Buscar entidad existente
+        const existing = await Model.findById(id);
+        if (!existing) {
+            return res.status(404).json({ message: `${entityName} no encontrado` });
+        }
+
+        // Eliminar imágenes de Cloudinary si las hay
+        if (Array.isArray(existing.images) && existing.images.length > 0) {
+            await Promise.all(existing.images.map((url) => deleteImageByUrl(url)));
+        }
+
+        // Eliminar entidad de la base de datos
+        const deleted = await Model.findByIdAndDelete(id);
+        if (!deleted) {
+            return res.status(404).json({ message: `${entityName} no encontrado` });
+        }
+
+        res.json({ message: `${entityName} eliminado` });
+    } catch (err) {
+        res.status(500).json({ message: `Error al eliminar ${entityName.toLowerCase()}`, error: err.message });
+    }
+}
+
 // TODO: Agregar más funciones genéricas para CRUD
 // ✅ handleEntityCreate - COMPLETADO
-// - handleEntityDelete  
+// ✅ handleEntityDelete - COMPLETADO  
 // - handleGetAllEntities
 // - handleGetEntityById
