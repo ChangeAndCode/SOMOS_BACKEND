@@ -42,7 +42,7 @@ app.options("/api/{*any}", cors(corsOptions));
 //app.options('/api/*', cors(corsOptions));
 
 // ---- Routes ----------
-app.get("/", (req, res) => res.send("Backend funcionando correctamente"));
+app.get("/", (req, res) => res.send("API is running..."));
 
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
