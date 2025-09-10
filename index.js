@@ -18,9 +18,7 @@ const port = process.env.PORT || 3000;
 await connectDB();
 
 const allowedOrigins = [
-  "https://vented5.github.io",
-  "https://miniature-disco-wgwg9p6wj9q2vgwr-5174.app.github.dev",
-  "https://miniature-disco-wgwg9p6wj9q2vgwr-5173.app.github.dev",
+  "https://somos-frontend-nine.vercel.app", // producción
   "http://localhost:5173", // para desarrollo
 ];
 
