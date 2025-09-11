@@ -1,50 +1,50 @@
 import Note from "../models/Note.js";
+import cloudinary from "../services/cloudinary.js";
+import { 
+    handleEntityCreate, 
+    handleEntityUpdate, 
+    handleEntityDelete, 
+    handleGetAllEntities, 
+    handleGetEntityById 
+} from "../utils/controllerUtils.js";
+import { normalizeFormData, FIELD_CONFIGS } from "../utils/validation.js";
+
+function normalizeNoteBody(body) {
+    return normalizeFormData(body, FIELD_CONFIGS.note || {});
+}
 
 export async function getAllNotes(req, res) {
-    try {
-        const notes = await Note.find();
-        res.json(notes);
-    } catch (err) {
-        res.status(500).json({ message: "Error al obtener notas", error: err.message });
-    }
+    return handleGetAllEntities(Note, req, res, {
+        entityName: 'Nota',
+        populate: 'author' 
+    });
 }
 
 export async function getNoteById(req, res) {
-    try {
-        const note = await Note.findById(req.params.id);
-        if (!note) return res.status(404).json({ message: "Nota no encontrada" });
-        res.json(note);
-    } catch (err) {
-        res.status(500).json({ message: "Error al obtener nota", error: err.message });
-    }
+    return handleGetEntityById(Note, req, res, {
+        entityName: 'Nota',
+        populate: 'author'
+    });
 }
 
 export async function createNote(req, res) {
-    try {
-        const newNote = new Note(req.body);
-        await newNote.save();
-        res.status(201).json(newNote);
-    } catch (err) {
-        res.status(400).json({ message: "Error al crear nota", error: err.message });
-    }
+    return handleEntityCreate(Note, req, res, {
+        entityName: 'Nota',
+        cloudinaryFolder: 'somos/note',
+        normalizeFunction: normalizeNoteBody
+    });
 }
 
 export async function updateNote(req, res) {
-    try {
-        const updated = await Note.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updated) return res.status(404).json({ message: "Nota no encontrada" });
-        res.json(updated);
-    } catch (err) {
-        res.status(400).json({ message: "Error al actualizar nota", error: err.message });
-    }
+    return handleEntityUpdate(Note, req, res, {
+        entityName: 'Nota',
+        cloudinaryFolder: 'somos/note',
+        normalizeFunction: normalizeNoteBody
+    });
 }
 
 export async function deleteNote(req, res) {
-    try {
-        const deleted = await Note.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ message: "Nota no encontrada" });
-        res.json({ message: "Nota eliminada" });
-    } catch (err) {
-        res.status(500).json({ message: "Error al eliminar nota", error: err.message });
-    }
+    return handleEntityDelete(Note, req, res, {
+        entityName: 'Nota'
+    });
 }
