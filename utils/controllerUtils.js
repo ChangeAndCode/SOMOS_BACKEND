@@ -9,9 +9,9 @@ import { normalizeFormData, validateFiles } from "./validation.js";
  * @param {Object} entityConfig - Configuración: { entityName, cloudinaryFolder, normalizeFunction }
  */
 export async function handleEntityCreate(Model, req, res, entityConfig) {
+    const { entityName, cloudinaryFolder, fieldConfig, normalizeFunction } = entityConfig;
+    
     try {
-        const { entityName, cloudinaryFolder, fieldConfig, normalizeFunction } = entityConfig;
-
         // Normalizar datos del formulario
         const payload = normalizeFunction ? normalizeFunction(req.body) : normalizeFormData(req.body, fieldConfig);
         let images = [];
@@ -50,10 +50,10 @@ export async function handleEntityCreate(Model, req, res, entityConfig) {
  * @param {Object} entityConfig - Configuración: { entityName, cloudinaryFolder, normalizeFunction }
  */
 export async function handleEntityUpdate(Model, req, res, entityConfig) {
+    const { id } = req.params;
+    const { entityName, cloudinaryFolder, fieldConfig, normalizeFunction } = entityConfig;
+    
     try {
-        const { id } = req.params;
-        const { entityName, cloudinaryFolder, fieldConfig, normalizeFunction } = entityConfig;
-
         // Verificar que la entidad existe
         const existing = await Model.findById(id);
         if (!existing) {
@@ -128,10 +128,10 @@ export async function handleEntityUpdate(Model, req, res, entityConfig) {
  * @param {Object} entityConfig - Configuración: { entityName }
  */
 export async function handleEntityDelete(Model, req, res, entityConfig) {
+    const { id } = req.params;
+    const { entityName } = entityConfig;
+    
     try {
-        const { id } = req.params;
-        const { entityName } = entityConfig;
-
         // Verificar que la entidad exists
         const existing = await Model.findById(id);
         if (!existing) {
@@ -163,9 +163,9 @@ export async function handleEntityDelete(Model, req, res, entityConfig) {
  * @param {Object} entityConfig - Configuración: { entityName, populate? }
  */
 export async function handleGetAllEntities(Model, req, res, entityConfig) {
+    const { entityName, populate } = entityConfig;
+    
     try {
-        const { entityName, populate } = entityConfig;
-        
         // Construir query con populate opcional
         let query = Model.find();
         if (populate) {
@@ -187,10 +187,10 @@ export async function handleGetAllEntities(Model, req, res, entityConfig) {
  * @param {Object} entityConfig - Configuración: { entityName, populate? }
  */
 export async function handleGetEntityById(Model, req, res, entityConfig) {
+    const { id } = req.params;
+    const { entityName, populate } = entityConfig;
+    
     try {
-        const { id } = req.params;
-        const { entityName, populate } = entityConfig;
-        
         // Construir query con populate opcional
         let query = Model.findById(id);
         if (populate) {
