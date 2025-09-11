@@ -32,6 +32,13 @@ export function normalizeFormData(body, fieldConfig = {}) {
                     .map(s => s.trim())
                     .filter(Boolean);
             }
+        } else if (type === 'json-object' && typeof normalized[field] === "string") {
+            try {
+                normalized[field] = JSON.parse(normalized[field]);
+            } catch {
+                // Si no es JSON válido, mantener como string
+                normalized[field] = normalized[field];
+            }
         } else if (type === 'date' && typeof normalized[field] === "string" && normalized[field]) {
             normalized[field] = new Date(normalized[field]);
         }
@@ -99,7 +106,6 @@ export function validateFiles(files) {
     return { valid: true };
 }
 
-// Configuraciones específicas por entidad
 export const FIELD_CONFIGS = {
     project: {
         programs: 'json-array',
@@ -112,5 +118,8 @@ export const FIELD_CONFIGS = {
     },
     event: {
         startDate: 'date'
-    }
-};
+    },
+    note: {
+        relatedTo: 'json-object'
+    },
+}

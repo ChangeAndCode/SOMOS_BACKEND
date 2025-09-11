@@ -4,6 +4,7 @@ const noteSchema = new mongoose.Schema({
     title: String,
     content: { type: String, required: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    images: [String],
     relatedTo: {
         type: {
             type: String, // e.g., "project", "program"
