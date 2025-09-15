@@ -10,6 +10,7 @@ import noteRoutes from "./routes/note.js";
 import eventRoutes from "./routes/event.js";
 import testimonyRoutes from "./routes/testimony.js";
 import authRoutes from "./routes/auth.js";
+import sumate from "./routes/sumate.js";
 
 dotenv.config();
 const app = express();
@@ -48,6 +49,7 @@ app.use("/api/programs", programRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/testimonies", testimonyRoutes);
+app.use("/api/sumate", sumate);
 //app.post("/api/auth/login", loginUser);
 app.use("/api/auth", authRoutes);
 
