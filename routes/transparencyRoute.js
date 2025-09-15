@@ -2,9 +2,10 @@
 import express from "express";
 import { authMiddleware } from "../middlewares/auth.js";
 import { requireAdmin } from "../middlewares/authorizeUserOrAdmin.js";
-import { uploadSingleDoc } from "../middlewares/upload.js";
+import { uploadMixed } from "../middlewares/upload.js";
 import {
   listPublic,
+  listAll,
   getOne,
   createTransparency,
   updateTransparency,
@@ -17,19 +18,19 @@ const router = express.Router();
 router.get("/", listPublic);
 router.get("/:id", getOne);
 
-// Solo consejo/admin
+// Solo admin
 router.post(
   "/",
   authMiddleware,
   requireAdmin,
-  uploadSingleDoc,
+  uploadMixed,
   createTransparency
 );
 router.put(
   "/:id",
   authMiddleware,
   requireAdmin,
-  uploadSingleDoc,
+  uploadMixed,
   updateTransparency
 );
 router.delete("/:id", authMiddleware, requireAdmin, deleteTransparency);

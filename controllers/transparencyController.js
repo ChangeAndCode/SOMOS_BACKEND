@@ -53,6 +53,58 @@ export async function listPublic(req, res) {
   }
 }
 
+export async function listAll(req, res) {
+  try {
+    const {
+      category,
+      q,
+      year,
+      type,
+      sort = "new",
+      page = 1,
+      limit = 50,
+    } = req.query;
+    const filter = {}; // Sin filtro de isPublic - muestra todos
+    if (category) filter.category = category;
+
+    if (year) {
+      const start = new Date(`${year}-01-01T00:00:00.000Z`);
+      const end = new Date(`${Number(year) + 1}-01-01T00:00:00.000Z`);
+      filter.$or = [
+        { publishedAt: { $gte: start, $lt: end } },
+        { createdAt: { $gte: start, $lt: end } },
+      ];
+    }
+
+    if (q) {
+      filter.$or = [
+        { title: new RegExp(q, "i") },
+        { description: new RegExp(q, "i") },
+        { tags: new RegExp(q, "i") },
+      ];
+    }
+
+    if (type) filter.mimeType = new RegExp(type, "i");
+
+    let sortBy = { createdAt: -1 }; // Ordenar por fecha de creación para admin
+    if (sort === "old") sortBy = { createdAt: 1 };
+    if (sort === "title") sortBy = { title: 1 };
+    if (sort === "published") sortBy = { publishedAt: -1 };
+
+    const docs = await Transparency.find(filter)
+      .sort(sortBy)
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit))
+      .lean();
+
+    const total = await Transparency.countDocuments(filter);
+
+    res.json({ page: Number(page), total, items: docs });
+  } catch (e) {
+    res.status(500).json({ message: "Error al listar todos", error: e.message });
+  }
+}
+
 export async function getOne(req, res) {
   try {
     const doc = await Transparency.findById(req.params.id).lean();
@@ -67,15 +119,18 @@ export async function createTransparency(req, res) {
   try {
     const { title, category, period, description, publishedAt, tags } =
       req.body;
-    if (!req.file)
+    
+    // Con uploadMixed, los archivos están en req.files.file[0]
+    const file = req.files?.file?.[0];
+    if (!file)
       return res
         .status(400)
         .json({ message: "Archivo requerido (field: file)" });
 
     // Subir a Cloudinary como RAW
-    const uploaded = await uploadBuffer(req.file.buffer, {
+    const uploaded = await uploadBuffer(file.buffer, {
       folder: "somos/transparency",
-      mimeType: req.file.mimetype,
+      mimeType: file.mimetype,
       resourceType: "raw",
     });
 
@@ -94,9 +149,9 @@ export async function createTransparency(req, res) {
       publishedAt: publishedAt ? new Date(publishedAt) : undefined,
       fileUrl: uploaded.url,
       filePublicId: uploaded.publicId, // <- requerido por el modelo
-      fileName: req.file.originalname,
-      mimeType: req.file.mimetype,
-      size: req.file.size,
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
       createdBy: req.user?.userId || null,
     });
 
@@ -130,20 +185,21 @@ export async function updateTransparency(req, res) {
     };
 
     // ¿reemplazo de archivo?
-    if (req.file) {
+    const file = req.files?.file?.[0];
+    if (file) {
       // borra el anterior en Cloudinary
       if (prev.filePublicId) await deleteByPublicId(prev.filePublicId, "raw");
       // sube el nuevo
-      const uploaded = await uploadBuffer(req.file.buffer, {
+      const uploaded = await uploadBuffer(file.buffer, {
         folder: "somos/transparency",
-        mimeType: req.file.mimetype,
+        mimeType: file.mimetype,
         resourceType: "raw",
       });
       updates.fileUrl = uploaded.url;
       updates.filePublicId = uploaded.publicId;
-      updates.fileName = req.file.originalname;
-      updates.mimeType = req.file.mimetype;
-      updates.size = req.file.size;
+      updates.fileName = file.originalname;
+      updates.mimeType = file.mimetype;
+      updates.size = file.size;
     }
 
     const updated = await Transparency.findByIdAndUpdate(id, updates, {

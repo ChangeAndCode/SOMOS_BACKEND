@@ -59,6 +59,21 @@ export const uploadMultipleDocs = multer({
   fileFilter: docFilter,
 }).array("files", 10); // campo: 'files' (máx 10)
 
+// Middleware mixto para formularios que pueden enviar tanto documentos como imágenes
+export const uploadMixed = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    // Aceptar tanto imágenes como documentos
+    if (allowedImages.has(file.mimetype) || allowedDocs.has(file.mimetype)) {
+      return cb(null, true);
+    }
+    cb(new Error("Tipo de archivo no permitido."));
+  }
+}).fields([
+  { name: 'file', maxCount: 1 },
+  { name: 'images', maxCount: 10 }
+]);
+
 /* ========= OPCIONAL: límites de tamaño =========
   (descomenta si quieres limitar tamaño)
 const limits5MB = { fileSize: 5 * 1024 * 1024 };
