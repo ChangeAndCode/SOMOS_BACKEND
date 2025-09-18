@@ -10,15 +10,18 @@ import {
   createTransparency,
   updateTransparency,
   deleteTransparency,
-} from "../controllers/transparencyController.js";
+  uploadTransparencyFile
+} from "../controllers/transparency.js";
 
 const router = express.Router();
 
 // Público
 router.get("/", listPublic);
 router.get("/:id", getOne);
+router.post("/:id/file", uploadMixed, uploadTransparencyFile);
 
-// Solo admin
+// Solo admin  
+router.get("/admin/all", authMiddleware, requireAdmin, listAll);
 router.post(
   "/",
   authMiddleware,

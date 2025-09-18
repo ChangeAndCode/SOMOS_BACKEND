@@ -10,7 +10,7 @@ import noteRoutes from "./routes/note.js";
 import eventRoutes from "./routes/event.js";
 import testimonyRoutes from "./routes/testimony.js";
 import authRoutes from "./routes/auth.js";
-import transparencyRoutes from "./routes/transparencyRoute.js"; 
+import transparencyRoutes from "./routes/transparency.js"; 
 
 dotenv.config();
 const app = express();

@@ -40,20 +40,49 @@ export function getPublicIdFromUrl(url) {
   }
 }
 
-// Sube buffer como archivo 'raw' (PDF, XLSX, DOCX, etc.)
 export function uploadBuffer(
   buffer,
-  { folder, mimeType, resourceType = "raw", publicId } = {}
+  { folder, mimeType, resourceType = "auto", publicId, originalFilename } = {}
 ) {
   ensureConfigured();
   return new Promise((resolve, reject) => {
+    // Extraer extensión del filename o mimeType
+    let format = null;
+    if (originalFilename) {
+      const ext = originalFilename.split('.').pop()?.toLowerCase();
+      if (ext) format = ext;
+    } else if (mimeType) {
+      const mimeToExt = {
+        'application/pdf': 'pdf',
+        'application/msword': 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+        'application/vnd.ms-excel': 'xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+        'application/vnd.ms-powerpoint': 'ppt',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+        'text/plain': 'txt',
+        'text/csv': 'csv',
+        'application/zip': 'zip'
+      };
+      format = mimeToExt[mimeType];
+    }
+
+    const options = {
+      folder,
+      resource_type: resourceType,
+      public_id: publicId,
+      overwrite: true,
+      use_filename: true,
+      unique_filename: !publicId, // Solo si no hay publicId específico
+    };
+
+    // Agregar format solo si lo tenemos
+    if (format) {
+      options.format = format;
+    }
+
     const stream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: resourceType,
-        public_id: publicId,
-        overwrite: true,
-      },
+      options,
       (err, result) =>
         err
           ? reject(err)
@@ -93,9 +122,83 @@ export async function deleteImageByUrl(url) {
 }
 
 // Borra por publicId (preferible) o por URL (fallback)
-export async function deleteByPublicId(publicId, resourceType = "raw") {
+export async function deleteByPublicId(publicId, resourceType = "image") {
   ensureConfigured();
   return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+}
+
+// Función para documentos - FUERZA resource_type raw
+export function uploadDocument(buffer, { folder, originalFilename, publicId } = {}) {
+  ensureConfigured();
+  return new Promise((resolve, reject) => {
+    // IMPORTANTE: Para documentos (PDF, DOCX, etc.) SIEMPRE usar "raw"
+    const options = {
+      folder,
+      resource_type: "raw", // ✅ Forzar RAW para todos los documentos
+      public_id: publicId,
+      overwrite: true,
+      use_filename: true,
+      unique_filename: !publicId,
+    };
+
+    console.log("📤 Cloudinary upload options (FORCED RAW):", options);
+    console.log("📄 Original filename:", originalFilename);
+
+    const stream = cloudinary.uploader.upload_stream(
+      options,
+      (err, result) => {
+        if (err) {
+          console.error("❌ Cloudinary upload error:", err);
+          reject(err);
+        } else {
+          console.log("✅ Cloudinary result (FORCED RAW):", {
+            secure_url: result.secure_url,
+            public_id: result.public_id,
+            resource_type: result.resource_type,
+            format: result.format,
+            bytes: result.bytes
+          });
+          resolve({ 
+            url: result.secure_url,
+            publicId: result.public_id 
+          });
+        }
+      }
+    );
+    stream.end(buffer);
+  });
+}
+
+// Nueva función específica para PDFs como imágenes (fallback si raw falla)
+export function uploadPdfAsImage(buffer, { folder, originalFilename, publicId } = {}) {
+  ensureConfigured();
+  return new Promise((resolve, reject) => {
+    // TRUCO: Para PDFs, usar resourceType 'image' evita restricciones pero crea problemas de acceso
+    const options = {
+      folder,
+      resource_type: "image",
+      public_id: publicId,
+      overwrite: true,
+      use_filename: true,
+      unique_filename: !publicId,
+      format: "pdf",
+    };
+
+    const stream = cloudinary.uploader.upload_stream(
+      options,
+      (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ 
+            url: result.secure_url,
+            publicId: result.public_id 
+          });
+        }
+      }
+    );
+    stream.end(buffer);
+  });
 }
 
 export default {
@@ -103,5 +206,7 @@ export default {
   deleteImageByUrl,
   getPublicIdFromUrl,
   uploadBuffer,
+  uploadDocument,
+  uploadPdfAsImage,
   deleteByPublicId,
 };
