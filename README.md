@@ -27,7 +27,7 @@ API backend en Node.js y Express para la gestión de proyectos, programas, event
 1. Clona el repositorio:
 
    ```bash
-   git clone https://github.com/tu-usuario/SOMOS_BACKEND.git
+   git clone https://github.com/ChangeAndCode/SOMOS_BACKEND.git
    cd SOMOS_BACKEND
    ```
 
