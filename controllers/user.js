@@ -24,15 +24,14 @@ export async function createUser(req, res) {
     try {
         const { password, ...rest } = req.body;
         const passwordHash = await bcrypt.hash(password, 10);
-
         const newUser = new User({ ...rest, passwordHash });
         await newUser.save();
-
         res.status(201).json(newUser);
     } catch (err) {
         res.status(400).json({ message: "Error al crear usuario", error: err.message });
     }
 }
+
 export async function updateUser(req, res) {
     try {
         const updated = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
