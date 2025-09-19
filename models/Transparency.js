@@ -1,12 +1,23 @@
 // models/Transparency.js
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const schema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
     category: {
       type: String,
-      enum: ["financial", "accountability", "board", "other"],
+      enum: [
+        'financial',
+        'accountability',
+        'board',
+        'hiring',
+        'staff',
+        'regulations',
+        'projects',
+        'access',
+        'participation',
+        'other',
+      ],
       required: true,
     },
     period: { type: String }, // "2024-Q3", "2025-07" (opcional)
@@ -21,7 +32,7 @@ const schema = new mongoose.Schema(
     size: Number,
 
     isPublic: { type: Boolean, default: true },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );
@@ -29,4 +40,4 @@ const schema = new mongoose.Schema(
 // Índices útiles para listar por categoría/fecha
 schema.index({ category: 1, publishedAt: -1, createdAt: -1 });
 
-export default mongoose.model("Transparency", schema);
+export default mongoose.model('Transparency', schema);
