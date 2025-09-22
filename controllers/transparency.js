@@ -9,37 +9,77 @@ export async function listPublic(req, res) {
       q,
       year,
       type,
+      fileType,
       sort = 'new',
       page = 1,
       limit = 12,
     } = req.query;
-    const filter = { isPublic: true };
-    if (category) filter.category = category;
+    const typeParam = type || fileType;
+
+    // Mapeo de tipos MIME clásicos y modernos
+    const mimeMap = {
+      pdf: ['application/pdf'],
+      doc: [
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ],
+      xls: [
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ],
+      ppt: [
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ],
+      txt: ['text/plain'],
+    };
+
+    // Filtros individuales
+    const filters = [{ isPublic: true }];
+    if (category) filters.push({ category });
 
     if (year) {
       const start = new Date(`${year}-01-01T00:00:00.000Z`);
       const end = new Date(`${Number(year) + 1}-01-01T00:00:00.000Z`);
-      filter.$or = [
-        { publishedAt: { $gte: start, $lt: end } },
-        { createdAt: { $gte: start, $lt: end } },
-      ];
+      filters.push({
+        $or: [
+          { publishedAt: { $gte: start, $lt: end } },
+          { createdAt: { $gte: start, $lt: end } },
+        ],
+      });
+    }
+
+    if (typeParam) {
+      const mimes = mimeMap[typeParam];
+      if (mimes) {
+        filters.push({
+          mimeType: { $in: mimes },
+        });
+      }
     }
 
     if (q) {
-      filter.$or = [
-        { title: new RegExp(q, 'i') },
-        { description: new RegExp(q, 'i') },
-        { tags: new RegExp(q, 'i') },
-        aquí,
-      ];
+      filters.push({
+        $or: [
+          { title: new RegExp(q, 'i') },
+          { description: new RegExp(q, 'i') },
+          { tags: new RegExp(q, 'i') },
+        ],
+      });
     }
 
-    if (type) filter.mimeType = new RegExp(type, 'i');
+    // Combinar todos los filtros con $and
+    const filter = filters.length > 1 ? { $and: filters } : filters[0];
 
-    let sortBy = { publishedAt: -1, createdAt: -1 };
+    // Ordenamiento
+    let sortBy = { publishedAt: -1, createdAt: -1 }; // default: más reciente primero
+    if (sort === 'new') sortBy = { publishedAt: -1, createdAt: -1 };
     if (sort === 'old') sortBy = { publishedAt: 1, createdAt: 1 };
     if (sort === 'title') sortBy = { title: 1 };
+    if (sort === 'fileType') sortBy = { mimeType: 1 };
+    if (sort === 'category') sortBy = { category: 1 };
 
+    // Consulta y paginación
     const docs = await Transparency.find(filter)
       .sort(sortBy)
       .skip((Number(page) - 1) * Number(limit))
