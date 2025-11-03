@@ -317,35 +317,52 @@ export async function uploadTransparencyFile(req, res) {
 }
 
 export async function uploadDocument(file) {
+  // Validar tamaño (ej: máximo 50MB)
+  const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+  if (file.size > MAX_SIZE) {
+    return {
+      url: null,
+      publicId: null,
+      error: 'Archivo demasiado grande (máx 50MB)',
+    };
+  }
+
   const safeName = file.originalname
-    .replace(/\s+/g, '_') // Reemplaza espacios por guiones bajos
-    .normalize('NFD') // Elimina acentos
+    .replace(/\s+/g, '_')
+    .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9._-]/g, ''); // Elimina caracteres especiales
+    .replace(/[^a-zA-Z0-9._-]/g, '');
 
   const fileName = `${Date.now()}-${safeName}`;
   const filePath = `transparency/${fileName}`;
-  const { data, error } = await supabase.storage
-    .from('Somos')
-    .upload(filePath, file.buffer, {
-      contentType: file.mimetype,
-    });
 
-  if (error) {
-    console.error('Error:', error);
-    return { url: null, publicId: null, error: error.message };
+  try {
+    const { data, error } = await supabase.storage
+      .from('Somos')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false, // Evita sobrescribir
+      });
+
+    if (error) {
+      console.error('Error subiendo archivo:', error);
+      return { url: null, publicId: null, error: error.message };
+    }
+
+    const { data: publicData, error: urlError } = supabase.storage
+      .from('Somos')
+      .getPublicUrl(filePath);
+
+    if (urlError) {
+      console.error('Error obteniendo URL:', urlError);
+      return { url: null, publicId: filePath, error: urlError.message };
+    }
+
+    return { url: publicData.publicUrl, publicId: filePath, error: null };
+  } catch (err) {
+    console.error('Error inesperado:', err);
+    return { url: null, publicId: null, error: err.message };
   }
-
-  const { data: publicData, error: urlError } = supabase.storage
-    .from('Somos')
-    .getPublicUrl(filePath);
-
-  if (urlError) {
-    console.error('Error obteniendo URL:', urlError);
-    return { url: null, publicId: filePath, error: urlError.message };
-  }
-
-  return { url: publicData.publicUrl, publicId: filePath, error: null };
 }
 
 export async function deleteDocument(filePublicId) {
