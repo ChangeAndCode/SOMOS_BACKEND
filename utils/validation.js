@@ -122,4 +122,7 @@ export const FIELD_CONFIGS = {
     note: {
         relatedTo: 'json-object'
     },
+    collaborator: {
+        order: 'number'
+    }
 }

@@ -12,6 +12,7 @@ import testimonyRoutes from './routes/testimony.js';
 import authRoutes from './routes/auth.js';
 import transparencyRoutes from './routes/transparency.js';
 import sumate from './routes/sumate.js';
+import collaboratorRoutes from './routes/collaborator.js';
 
 dotenv.config();
 const app = express();
@@ -52,6 +53,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/testimonies', testimonyRoutes);
 app.use('/api/transparency', transparencyRoutes);
 app.use('/api/sumate', sumate);
+app.use('/api/collaborators', collaboratorRoutes);
 //app.post("/api/auth/login", loginUser);
 app.use('/api/auth', authRoutes);
 
