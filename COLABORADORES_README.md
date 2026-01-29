@@ -1,5 +1,9 @@
 # Funcionalidad de Gestión de Colaboradores
 
+> 📅 **Última actualización:** 29 de enero de 2026  
+> 👤 **Desarrollador:** [Tu nombre]  
+> 📋 **Estado:** Funcional (usando credenciales temporales de Cloudinary)
+
 ## ¿Qué se implementó?
 
 Se creó un **sistema completo para administrar los logos de empresas y organizaciones colaboradoras** que aparecen en la sección "Orgullosos colaboradores de:" en la página principal del sitio web.
@@ -229,7 +233,8 @@ El archivo `.env` del backend debe tener:
 
 ```env
 # Base de datos
-MONGODB_URI=mongodb+srv://usuario:password@servidor.mongodb.net/base_datos
+MONGODB_URI=mongodb://localhost:27017/somos_db
+# O para MongoDB Atlas: mongodb+srv://TU_USUARIO:TU_PASSWORD@TU_CLUSTER.mongodb.net/TU_DATABASE
 
 # Cloudinary (almacenamiento de imágenes)
 CLOUDINARY_CLOUD_NAME=tu_cloud_name
