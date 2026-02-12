@@ -23,7 +23,7 @@ export async function loginUser(req, res) {
       expiresIn: JWT_EXPIRES_IN,
     });
 
-    res.json({ token, user }).status(200);
+    res.status(200).json({ token, user });
   } catch (err) {
     res.status(500).json({ message: "Error en login", error: err.message });
   }

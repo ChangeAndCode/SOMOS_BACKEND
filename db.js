@@ -4,10 +4,7 @@ export async function connectDB() {
     const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/miapp";
 
     try {
-        await mongoose.connect(uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
+        await mongoose.connect(uri);
         console.log("🟢 Conectado a MongoDB");
     } catch (err) {
         console.error("🔴 Error conectando a MongoDB:", err.message);
