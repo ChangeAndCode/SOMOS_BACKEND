@@ -20,27 +20,8 @@ app.use(express.json());
 const port = process.env.PORT || 3000;
 await connectDB();
 
-const allowedOrigins = [
-  'https://somos-frontend-nine.vercel.app', // producción
-  'http://localhost:5173', // para desarrollo
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('No permitido por CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-
-app.use(cors(corsOptions));
-
-app.options('/api/{*any}', cors(corsOptions));
-//app.options('/api/*', cors(corsOptions));
+// CORS abierto por ahora; restringir por dominio cuando esté definido
+app.use(cors());
 
 // ---- Routes ----------
 app.get('/', (req, res) => res.send('API is running...'));
