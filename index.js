@@ -38,7 +38,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 app.options('/api/{*any}', cors(corsOptions));
 //app.options('/api/*', cors(corsOptions));
 
